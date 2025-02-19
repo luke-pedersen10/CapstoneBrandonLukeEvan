@@ -11,7 +11,7 @@ EXPIRATION_COUNT = 3  # Number of expiration dates to fetch
 # Black-Scholes Greeks Calculation with T=0 Fix
 def calculate_greeks(S, K, T, r, sigma, option_type="call"):
     """Compute Black-Scholes Greeks while handling T=0 cases."""
-    epsilon = 1e-6  # Small constant to prevent division by zero
+    epsilon = 1/365  # Small constant to prevent division by zero
     T = max(T, epsilon)  # Ensure T is never exactly 0
 
     d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
