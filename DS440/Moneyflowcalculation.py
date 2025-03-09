@@ -1,8 +1,12 @@
 import yfinance as yf
 import pandas as pd
 import seaborn as sns
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors  
+from io import BytesIO
+import base64
 
 def calculate_money_flow(tickers, period='5d', interval='1d'):
     """
@@ -52,27 +56,37 @@ def calculate_money_flow(tickers, period='5d', interval='1d'):
     result_df = pd.concat(results, ignore_index=True)
     return result_df
 
-tickers = ['AAPL', 'MSFT', 'TSLA','GOOGL',"AMZN"]
-money_flow_data = calculate_money_flow(tickers)
-print(money_flow_data)
+def generate_heatmap():
+    tickers = ['AAPL', 'MSFT', 'TSLA','GOOGL',"AMZN"]
+    money_flow_data = calculate_money_flow(tickers)
+    heatmap_data = money_flow_data.pivot(index='Date', columns='Ticker', values='Money Flow')
+    
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(heatmap_data, cmap='coolwarm', norm=mcolors.LogNorm())
+    plt.title("Stock Money Flow Heat Map")
+    plt.xticks(rotation=45)
+    
+    # Save plot to buffer
+    buf = BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    plt.close()
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode('utf-8')
 
-heatmap_data = money_flow_data.pivot(index='Date', columns='Ticker', values='Money Flow')
-
-print(heatmap_data.head())
-
-# Set plot size
-plt.figure(figsize=(10, 6))
-
-# Create heatmap
-sns.heatmap(heatmap_data, cmap='coolwarm', norm=mcolors.LogNorm())
-
-# Add title
-plt.title("Stock Money Flow Heat Map")
-
-# Rotate x-axis labels for better readability
-plt.xticks(rotation=45)
-
-# Show plot
-plt.show()
-
-
+def handler(request):
+    try:
+        image_data = generate_heatmap()
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'image/png',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': image_data,
+            'isBase64Encoded': True
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': str(e)
+        }
