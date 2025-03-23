@@ -35,5 +35,33 @@ def plot_rsi(stock_symbol, start_date, end_date):
     plt.legend()
     plt.show()
 
+
+def calculate_macd(data, short_window=12, long_window=26, signal_window=9):
+    short_ema = data['Close'].ewm(span=short_window, adjust=False).mean()
+    long_ema = data['Close'].ewm(span=long_window, adjust=False).mean()
+    macd = short_ema - long_ema
+    signal = macd.ewm(span=signal_window, adjust=False).mean()
+    return macd, signal
+
+def plot_macd(stock_symbol, start_date, end_date):
+    stock_data = yf.download(stock_symbol, start=start_date, end=end_date)
+    if stock_data.empty:
+        print(f"No data available for {stock_symbol} in the given date range.")
+        return
+    
+    stock_data['MACD'], stock_data['Signal'] = calculate_macd(stock_data)
+    
+    plt.figure(figsize=(12, 6))
+    plt.plot(stock_data.index, stock_data['MACD'], label='MACD', color='blue')
+    plt.plot(stock_data.index, stock_data['Signal'], label='Signal Line', color='red', linestyle='--')
+    plt.axhline(0, linestyle='-', color='black', alpha=0.7)
+    plt.title(f'Moving Average Convergence Divergence (MACD) - {stock_symbol}')
+    plt.xlabel('Date')
+    plt.ylabel('MACD Value')
+    plt.legend()
+    plt.show()
+
+
 # Example usage:
 plot_rsi('AAPL', '2024-01-01', '2025-01-01')
+plot_macd('AAPL', '2024-01-01', '2025-01-01')
