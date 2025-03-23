@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script defer="" src="/_vercel/insights/script.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+    <title>Stock Price and Volume Plot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #333;
+            color: #fff;
+        }
+        .date-picker-container {
+            display: inline-block;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #444;
+        }
+        label {
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        input[type="date"], input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #888;
+            background-color: #222;
+            color: white;
+        }
+        input[type="date"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #66aaff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stock Price and Volume Plot</h1>
+    <form action="/plot" method="POST">
+        <h2>Enter Stock Symbol and Date Range</h2>
+        <input type="text" id="stock_symbol" name="stock_symbol" placeholder="Stock Symbol (e.g., AAPL)" required>
+        <br><br>
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" required>
+        <br><br>
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" required>
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
+    <br><br>
+    {% if image_url %}
+        <h2>Generated Plot</h2>
+        <img src="{{ image_url }}" alt="Stock Plot">
+    {% endif %}
+</body>
+</html>
