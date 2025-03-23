@@ -1,6 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.table import Table
 
 
 def calculate_rsi(data, window=14):
@@ -62,6 +63,8 @@ def plot_macd(stock_symbol, start_date, end_date):
     plt.show()
 
 
+
 # Example usage:
 plot_rsi('AAPL', '2024-01-01', '2025-01-01')
 plot_macd('AAPL', '2024-01-01', '2025-01-01')
+
