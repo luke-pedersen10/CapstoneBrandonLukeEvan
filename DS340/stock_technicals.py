@@ -64,6 +64,32 @@ def plot_macd(stock_symbol, start_date, end_date):
 
 
 
+def plot_stock_price_and_volume(stock_symbol, start_date, end_date):
+    # Download historical data for the stock
+    stock_data = yf.download(stock_symbol, start=start_date, end=end_date)
+    
+    if stock_data.empty:
+        print(f"No data available for {stock_symbol} in the given date range.")
+        return
+    
+    # Create a figure with two subplots: one for price and one for volume
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+
+    # Plot the stock price on the first axis (ax1)
+    ax1.plot(stock_data.index, stock_data['Close'], color='blue', label='Closing Price')
+    ax1.set_title(f'{stock_symbol} Price and Volume')
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Closing Price', color='blue')
+    ax1.tick_params(axis='y', labelcolor='blue')
+    
+
+    # Show the plot
+    fig.tight_layout()
+    plt.show()
+
+# Example usage:
+plot_stock_price_and_volume('AAPL', '2024-01-01', '2025-01-01')
+
 # Example usage:
 plot_rsi('AAPL', '2024-01-01', '2025-01-01')
 plot_macd('AAPL', '2024-01-01', '2025-01-01')
