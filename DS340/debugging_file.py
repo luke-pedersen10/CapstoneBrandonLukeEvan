@@ -8,8 +8,10 @@ from ta.utils import dropna
 from statsmodels.tsa.seasonal import seasonal_decompose
 # Device configuration
 
-def get_stock_data(ticker, start='2024-01-01', end='2025-03-24'):
-    stock = yf.download(ticker, start=start, end=end)
+def get_stock_data(ticker, start='2024-01-01', end='2025-03-24', buffer_days=200):
+    # Extend the start date backward by the buffer_days
+    extended_start = pd.to_datetime(start) - pd.Timedelta(days=buffer_days)
+    stock = yf.download(ticker, start=extended_start.strftime('%Y-%m-%d'), end=end)
     return stock
 
 def calculate_rsi(data, window=14):
@@ -25,8 +27,13 @@ def calculate_rsi(data, window=14):
     rsi = rsi.fillna(50)  # Default to neutral if not enough data
     return rsi
 
-def data_preparation(data):
+def data_preparation(data, start_date='2024-01-01', buffer_days_ma50=50, buffer_days_ma200=200):
+    data_ma50 = data[data.index >= (pd.to_datetime(start_date) - pd.Timedelta(days=buffer_days_ma50))]
+    data_ma200 = data[data.index >= (pd.to_datetime(start_date) - pd.Timedelta(days=buffer_days_ma200))]
+ 
+    
     data = dropna(data)  # Drop NA values from the dataframe
+
     data[['Log Price']] = np.log(data['Close'])  # Log transformation for stationarity
     data[['Log Volume']] = np.log(data['Volume'].replace(0,np.nan))  # Log transformation for volume, add 1 to avoid log(0)
     data[['Log Volume']].fillna(data[['Log Volume']].rolling(window=5, min_periods=1).mean(), inplace=True)
@@ -57,18 +64,20 @@ def data_preparation(data):
     data['PE Ratio'] = data['Close'] / data['Earnings'] if 'Earnings' in data.columns else np.nan
      # Example PE ratio calculation, ensure 'Earnings' column exists in your data
 
-    data['MA50'] = data['Close'].rolling(50).mean()
-    print(data['MA50'].shape())
-    print(data['MA50'].head())
-    print(data['Close'].shape())
-    print(data['Close'].head())
-    data['Log Diff MA50'] = np.log(data['Close']) - np.log(data['MA50'])
+    data_ma50['MA50'] = data_ma50['Close'].rolling(50).mean()
+    data_ma50['Log Diff MA50'] = np.log(data_ma50['Close']) - np.log(data_ma50['MA50'])
 
-    data['MA200'] = data['Close'].rolling(200).mean()
-    data['Log Diff MA200'] = np.log(data['Close']) - np.log(data['MA200'])
+    data_ma200['MA200'] = data_ma200['Close'].rolling(200).mean()
+    data_ma200['Log Diff MA200'] = np.log(data_ma200['Close']) - np.log(data_ma200['MA200'])
+
 
     decomposition = seasonal_decompose(data['Close'], model='additive', period=252)  # Assuming yearly seasonality
     data['Seasonality'] = decomposition.seasonal
+
+    data = data[data.index >= start_date]
+
+    data = data.merge(data_ma50[['MA50', 'Log Diff MA50']], how='left', left_index=True, right_index=True)
+    data = data.merge(data_ma200[['MA200', 'Log Diff MA200']], how='left', left_index=True, right_index=True)
 
     feature_columns = ['Log Price Diff', 'Percent Change', 'RSI', 'MFI', 'Log Volume Diff',
                        'Beta', 'PE Ratio', 'Log Diff MA50', 'Log Diff MA200', 'Seasonality']
