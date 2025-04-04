@@ -5,6 +5,7 @@ import pandas as pd
 from scipy.stats import norm
 from ta.volume import MFIIndicator
 from ta.utils import dropna
+import math
 from statsmodels.tsa.seasonal import seasonal_decompose
 # Device configuration
 
@@ -65,13 +66,14 @@ def data_preparation(data, start_date='2024-01-01', buffer_days_ma50=50, buffer_
      # Example PE ratio calculation, ensure 'Earnings' column exists in your data
 
     data_ma50['MA50'] = data_ma50['Close'].rolling(50).mean()
-    data_ma50['Log Diff MA50'] = np.log(data_ma50['Close']) - np.log(data_ma50['MA50'])
+    data_ma50['Log Diff MA50'] = np.log(data_ma50['Close'].values.flatten()) - np.log(data_ma50['MA50'].values.flatten())
 
     data_ma200['MA200'] = data_ma200['Close'].rolling(200).mean()
-    data_ma200['Log Diff MA200'] = np.log(data_ma200['Close']) - np.log(data_ma200['MA200'])
+    data_ma200['Log Diff MA200'] = np.log(data_ma200['Close'].values.flatten()) - np.log(data_ma200['MA200'].values.flatten())
 
 
-    decomposition = seasonal_decompose(data['Close'], model='additive', period=252)  # Assuming yearly seasonality
+
+    decomposition = seasonal_decompose(data['Close'], model='additive', period=math.floor(data['Close'].size/2))  # Assuming yearly seasonality
     data['Seasonality'] = decomposition.seasonal
 
     data = data[data.index >= start_date]
